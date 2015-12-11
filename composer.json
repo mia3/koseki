@@ -1,0 +1,15 @@
+{
+    "name": "mia3/koseki",
+    "description": "Library to quickly find classes that implement specific interfaces",
+    "authors": [
+        {
+            "name": "Marc Neuhaus",
+            "email": "mneuhaus@famelo.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Mia3\\Koseki\\": "src"
+        }
+    }
+}
