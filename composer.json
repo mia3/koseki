@@ -11,5 +11,6 @@
         "psr-4": {
             "Mia3\\Koseki\\": "src"
         }
-    }
+    },
+    "version": "1.0.0"
 }
