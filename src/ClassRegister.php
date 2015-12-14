@@ -63,8 +63,8 @@ class ClassRegister {
 			if (!preg_match('/^ComposerAutoloader[A-z0-9]*$/', $className)) {
 				continue;
 			}
-
-			static::loadAllPsr4Classes($className::getLoader()->getPrefixesPsr4());
+			$reflector = new \ReflectionClass($className);
+			static::loadAllPsr4Classes($className::getLoader()->getPrefixesPsr4(), realpath(dirname($reflector->getFileName()) . '/../../'));
 		}
 
 		$cache = array();
@@ -93,12 +93,12 @@ class ClassRegister {
 	 * @param array $psr4Prefix
 	 * @return void
 	 */
-	public static function loadAllPsr4Classes($psr4Prefixes) {
+	public static function loadAllPsr4Classes($psr4Prefixes, $rootDirectory) {
 		$gitignore = new Gitignore();
 		$gitignore->addPatternFile(static::$rootDirectory . '.koseki-ignore');
 		foreach ($psr4Prefixes as $psr4Prefix => $classDirectories) {
 			foreach ($classDirectories as $classDirectory) {
-				$relativeClassDirectory = str_replace(static::$rootDirectory, '', $classDirectory) . '/';
+				$relativeClassDirectory = ltrim(str_replace($rootDirectory, '', $classDirectory) . '/', '/');
 				$gitignore->addPatternFile($classDirectory . '/.koseki-ignore', $relativeClassDirectory);
 				$gitignore->addPatternFile($classDirectory . '/.gitattributes', $relativeClassDirectory);
 				$classFiles = new \RegexIterator(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($classDirectory)), '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
