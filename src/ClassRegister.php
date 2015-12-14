@@ -37,15 +37,16 @@ class ClassRegister {
 		$vendorDir = realpath(__DIR__ . '/../../../');
 		static::$rootDirectory = realpath(__DIR__ . '/../../../../') . '/';
 
+		static::locateComposerPaths();
+
 		if (static::$cache === NULL) {
-			$autoloadFile = $vendorDir . '/composer/autoload_psr4.php';
-			$md5 = md5_file($autoloadFile);
+			$md5 = static::generateCacheHash();
 			$cacheFile = sys_get_temp_dir() . '/class_register_' . $md5 . '.php';
 
 			if (file_exists($cacheFile) && $forceRecache === FALSE) {
 				static::$cache = include($cacheFile);
 			} else {
-				static::$cache = static::generateCache($cacheFile, $autoloadFile);
+				static::$cache = static::generateCache($cacheFile);
 			}
 		}
 
@@ -53,18 +54,41 @@ class ClassRegister {
 	}
 
 	/**
-	 * @param $cacheFile
-	 * @param $autoloadFile
+	 * generate a cache md5 hash based on all located composer autoload_psr4 files
 	 */
-	protected static function generateCache($cacheFile, $autoloadFile) {
-		register_shutdown_function('\Mia3\Koseki\ClassRegister::catchFatalError');
+	public static function generateCacheHash() {
+		$hashes = array();
+		foreach (static::locateComposerPaths() as $className => $composerPath) {
+			if (file_exists($composerPath . '/autoload_psr4.php')) {
+				$hashes[] = md5_file($composerPath . '/autoload_psr4.php');
+			}
+		}
+		return md5(implode('', $hashes));
+	}
 
+	/**
+	 * locate all "active" composer pathis in this php execution
+	 */
+	public static function locateComposerPaths() {
+		$composerPaths = array();
 		foreach (get_declared_classes() as $className) {
 			if (!preg_match('/^ComposerAutoloader[A-z0-9]*$/', $className)) {
 				continue;
 			}
 			$reflector = new \ReflectionClass($className);
-			static::loadAllPsr4Classes($className::getLoader()->getPrefixesPsr4(), realpath(dirname($reflector->getFileName()) . '/../../'));
+			$composerPaths[$className] = dirname($reflector->getFileName());
+		}
+		return $composerPaths;
+	}
+
+	/**
+	 * @param $cacheFile
+	 */
+	protected static function generateCache($cacheFile) {
+		register_shutdown_function('\Mia3\Koseki\ClassRegister::catchFatalError');
+
+		foreach (static::locateComposerPaths() as $className => $composerPath) {
+			static::loadAllPsr4Classes($className::getLoader()->getPrefixesPsr4(), realpath($composerPath . '/../../'));
 		}
 
 		$cache = array();
