@@ -59,26 +59,13 @@ class ClassRegister {
 	protected static function generateCache($cacheFile, $autoloadFile) {
 		register_shutdown_function('\Mia3\Koseki\ClassRegister::catchFatalError');
 
-		$gitignore = new Gitignore();
-		$gitignore->addPatternFile(static::$rootDirectory . '.koseki-ignore');
-
-		$psr4Namespaces = include($autoloadFile);
-		foreach ($psr4Namespaces as $psr4Namespace => $classDirectories) {
-			foreach ($classDirectories as $classDirectory) {
-				$relativeClassDirectory = str_replace(static::$rootDirectory, '', $classDirectory) . '/';
-				$gitignore->addPatternFile($classDirectory . '/.koseki-ignore', $relativeClassDirectory);
-				$gitignore->addPatternFile($classDirectory . '/.gitattributes', $relativeClassDirectory);
-				$classFiles = new \RegexIterator(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($classDirectory)), '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
-				foreach ($classFiles as $classFile) {
-					static::$filePointer = current($classFile);
-					if ($gitignore->matches(str_replace(static::$rootDirectory, '', static::$filePointer)) === TRUE) {
-						continue;
-					}
-					require_once(static::$filePointer);
-				}
+		foreach (get_declared_classes() as $className) {
+			if (!preg_match('/^ComposerAutoloader[A-z0-9]*$/', $className)) {
+				continue;
 			}
+
+			static::loadAllPsr4Classes($className::getLoader()->getPrefixesPsr4());
 		}
-		static::$filePointer = NULL;
 
 		$cache = array();
 		foreach (get_declared_classes() as $className) {
@@ -99,6 +86,32 @@ class ClassRegister {
 		return ' . var_export($cache, TRUE) . ';');
 
 		return $cache;
+	}
+
+	/**
+	 * loads all classes based on a comoser psr4Prefix array
+	 * @param array $psr4Prefix
+	 * @return void
+	 */
+	public static function loadAllPsr4Classes($psr4Prefixes) {
+		$gitignore = new Gitignore();
+		$gitignore->addPatternFile(static::$rootDirectory . '.koseki-ignore');
+		foreach ($psr4Prefixes as $psr4Prefix => $classDirectories) {
+			foreach ($classDirectories as $classDirectory) {
+				$relativeClassDirectory = str_replace(static::$rootDirectory, '', $classDirectory) . '/';
+				$gitignore->addPatternFile($classDirectory . '/.koseki-ignore', $relativeClassDirectory);
+				$gitignore->addPatternFile($classDirectory . '/.gitattributes', $relativeClassDirectory);
+				$classFiles = new \RegexIterator(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($classDirectory)), '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
+				foreach ($classFiles as $classFile) {
+					static::$filePointer = current($classFile);
+					if ($gitignore->matches(str_replace(static::$rootDirectory, '', static::$filePointer)) === TRUE) {
+						continue;
+					}
+					require_once(static::$filePointer);
+				}
+			}
+		}
+		static::$filePointer = NULL;
 	}
 
 	/**
