@@ -29,28 +29,45 @@ class ClassRegister {
 	protected static $ignore;
 
 	/**
+	 * @var string
+	 */
+	protected static $cacheFile;
+
+
+	/**
 	 * find implementations for a specific interface or classes extending from base class
 	 * @param string $interfaceName full class/interface name to look implementations up for
 	 * @param boolean $forceRecache
+	 * @param string $cacheFile
 	 */
-	public static function getImplementations($interfaceName, $forceRecache = FALSE) {
+	public static function getImplementations($interfaceName, $forceRecache = FALSE, $cacheFile = NULL) {
 		$vendorDir = realpath(__DIR__ . '/../../../');
 		static::$rootDirectory = realpath(__DIR__ . '/../../../../') . '/';
 
 		static::locateComposerPaths();
 
 		if (static::$cache === NULL) {
-			$md5 = static::generateCacheHash();
-			$cacheFile = sys_get_temp_dir() . '/class_register_' . $md5 . '.php';
+			if (static::$cacheFile === NULL) {
+				$md5 = static::generateCacheHash();
+				static::$cacheFile = sys_get_temp_dir() . '/class_register_' . $md5 . '.php';
+			}
 
-			if (file_exists($cacheFile) && $forceRecache === FALSE) {
-				static::$cache = include($cacheFile);
+			if (file_exists(static::$cacheFile) && $forceRecache === FALSE) {
+				static::$cache = include(static::$cacheFile);
 			} else {
-				static::$cache = static::generateCache($cacheFile);
+				static::$cache = static::generateCache(static::$cacheFile);
 			}
 		}
 
 		return isset(static::$cache[$interfaceName]) ? static::$cache[$interfaceName] : array();
+	}
+
+	/**
+	 *
+	 * @param string $cacheFile
+	 */
+	public static function setCacheFile($cacheFile = NULL) {
+		static::$cacheFile = $cacheFile;
 	}
 
 	/**
@@ -107,7 +124,7 @@ class ClassRegister {
 			}
 		}
 		file_put_contents($cacheFile, '<?php
-		return ' . var_export($cache, TRUE) . ';');
+return ' . var_export($cache, TRUE) . ';');
 
 		return $cache;
 	}
