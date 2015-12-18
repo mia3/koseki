@@ -1,5 +1,5 @@
 {
-    "name": "mia3/koseki",
+    "name": "mia3\/koseki",
     "description": "Library to quickly find classes that implement specific interfaces",
     "authors": [
         {
@@ -12,5 +12,5 @@
             "Mia3\\Koseki\\": "src"
         }
     },
-    "version": "1.2.0"
+    "version": "1.2.1"
 }
