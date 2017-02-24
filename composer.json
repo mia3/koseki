@@ -1,5 +1,6 @@
 {
     "name": "mia3\/koseki",
+    "type": "composer-plugin",
     "description": "Library to quickly find classes that implement specific interfaces",
     "authors": [
         {
@@ -12,5 +13,10 @@
             "Mia3\\Koseki\\": "src"
         }
     },
-    "version": "1.3.0"
+    "require": {
+        "composer-plugin-api": "^1.0"
+    },
+    "extra": {
+        "class": "Mia3\\Koseki\\ComposerPlugin"
+    }
 }
