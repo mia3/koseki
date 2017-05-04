@@ -14,7 +14,10 @@
         }
     },
     "require": {
-        "composer-plugin-api": "^1.0"
+        "composer-plugin-api": "^1.0",
+        "phpunit/phpunit": "^6.0",
+        "hafriedlander/php-peg": "dev-master",
+        "roave/better-reflection": "dev-master"
     },
     "extra": {
         "class": "Mia3\\Koseki\\ComposerPlugin"

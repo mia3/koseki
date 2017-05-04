@@ -1,0 +1,44 @@
+#!/usr/bin/env php
+<?php
+
+if (file_exists(__DIR__ . '/../autoload.php')) {
+    require_once __DIR__ . '/../autoload.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+} elseif (file_exists(__DIR__ . '/../../../autoload.php')) {
+    require_once __DIR__ . '/../../../autoload.php';
+}
+
+if (!isset($argv[1])) {
+	die('you need to specify a valid php file path');
+}
+
+$classFileName = $argv[1];
+
+if (!file_exists($classFileName)) {
+	die('the file "' . $classFileName . '" does not exist!');
+}
+
+$defaultClasses = get_declared_classes();
+set_time_limit(1);
+require $classFileName;
+
+$newClassNames = array_diff(get_declared_classes(), $defaultClasses);
+
+$classRegister = [];
+foreach ($newClassNames as $className) {
+	foreach (class_implements($className) as $interface) {
+		if (!isset($classRegister[$interface])) {
+			$classRegister[$interface] = array();
+		}
+		$classRegister[$interface][] = $className;
+	}
+	foreach (class_parents($className) as $parentClassName) {
+		if (!isset($classRegister[$parentClassName])) {
+			$classRegister[$parentClassName] = array();
+		}
+		$classRegister[$parentClassName][] = $className;
+	}
+}
+
+echo json_encode($classRegister);

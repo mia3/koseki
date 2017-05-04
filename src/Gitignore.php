@@ -29,6 +29,10 @@ class Gitignore {
 	 * @param string $filename
 	 */
 	public function matches($filename) {
+		var_dump($this->compiledPattern);
+		if (empty($this->compiledPattern)) {
+			return false;
+		}
 		return preg_match($this->compiledPattern, $filename, $match) === 1;
 	}
 
